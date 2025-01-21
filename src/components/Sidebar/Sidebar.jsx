@@ -43,8 +43,8 @@ const Sidebar = () => {
         />
       </Box>
       <List sx={{ '& .MuiListItem-root': { borderRadius: 1 } }}>
-        <ListItem 
-          button 
+        <ListItem
+          button
           onClick={() => navigate('/')}
           selected={location.pathname === '/'}
         >

@@ -23,7 +23,8 @@ import {
   Menu,
   Card,
   CardContent,
-  Grid
+  Grid,
+  InputAdornment
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
@@ -32,6 +33,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import GridViewIcon from '@mui/icons-material/GridView';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 
 const SurveyList = ({ filterType = 'all' }) => {
   const navigate = useNavigate();
@@ -47,28 +49,39 @@ const SurveyList = ({ filterType = 'all' }) => {
   const [starredSurveys, setStarredSurveys] = useState(() => {
     return new Set(JSON.parse(localStorage.getItem('starredSurveys') || '[]'));
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredSurveys = React.useMemo(() => {
+    // First apply the search filter
+    let result = surveys;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(survey => 
+        survey.name.toLowerCase().includes(query) || 
+        survey.owner.toLowerCase().includes(query)
+      );
+    }
+
+    // Then apply the type filter
     switch (filterType) {
       case 'starred':
-        return surveys.filter(survey => starredSurveys.has(survey.id));
+        return result.filter(survey => starredSurveys.has(survey.id));
       case 'recent':
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         
-        return surveys
+        return result
           .filter(survey => {
             const surveyDate = new Date(survey.creationDate);
             return surveyDate >= sevenDaysAgo;
           })
           .sort((a, b) => {
-            // Sort by creation date, newest first
             return new Date(b.creationDate) - new Date(a.creationDate);
           });
       default:
-        return surveys;
+        return result;
     }
-  }, [surveys, starredSurveys, filterType]);
+  }, [surveys, starredSurveys, filterType, searchQuery]);
 
   // First filter, then sort the surveys
   const sortedAndFilteredSurveys = React.useMemo(() => {
@@ -271,10 +284,22 @@ const SurveyList = ({ filterType = 'all' }) => {
     </Grid>
   );
 
+  // Add a function to get the title based on filterType
+  const getPageTitle = () => {
+    switch (filterType) {
+      case 'starred':
+        return 'Starred surveys in this team';
+      case 'recent':
+        return 'Recent surveys in this team';
+      default:
+        return 'All surveys in this team';
+    }
+  };
+
   return (
     <Box sx={{ width: '100%', p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5">Surveys in this team</Typography>
+        <Typography variant="h5">{getPageTitle()}</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -283,6 +308,23 @@ const SurveyList = ({ filterType = 'all' }) => {
         >
           Create new
         </Button>
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          fullWidth
+          placeholder="Search surveys by name or owner..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
+            sx: { borderRadius: '20px' }
+          }}
+        />
       </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -315,8 +357,30 @@ const SurveyList = ({ filterType = 'all' }) => {
         </ToggleButtonGroup>
       </Box>
 
-      {/* Render view based on viewMode */}
-      {viewMode === 'list' ? renderListView() : renderGridView()}
+      {filteredSurveys.length === 0 && (
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          py: 4 
+        }}>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No surveys found
+          </Typography>
+          <Typography color="text.secondary">
+            {searchQuery.trim() 
+              ? 'Try adjusting your search terms'
+              : filterType === 'starred'
+                ? 'Star some surveys to see them here'
+                : 'Create a new survey to get started'
+            }
+          </Typography>
+        </Box>
+      )}
+
+      {filteredSurveys.length > 0 && (
+        viewMode === 'list' ? renderListView() : renderGridView()
+      )}
 
       <Dialog 
         open={isNameDialogOpen} 
