@@ -66,23 +66,37 @@ const CreateSurvey = () => {
   
   const isEditMode = location.state?.editMode;
   const surveyToEdit = location.state?.surveyToEdit;
-  
-  const surveyName = isEditMode ? surveyToEdit.name : (location.state?.surveyName || 'Untitled Survey');
-  
-  const [selectedDemographics, setSelectedDemographics] = useState(
-    isEditMode ? surveyToEdit.demographics : []
-  );
-  const [customInformation, setCustomInformation] = useState(
-    isEditMode ? surveyToEdit.customInformation : ''
-  );
+  const returnData = location.state?.returnData;
 
+  // Add console log to see what data we're getting
+  console.log('Location State:', location.state);
+  console.log('Return Data:', returnData);
+
+  // Initialize states with returnData if it exists
+  const [selectedDemographics, setSelectedDemographics] = useState(() => {
+    if (returnData?.selectedDemographics) {
+      return returnData.selectedDemographics;
+    }
+    return isEditMode ? surveyToEdit?.demographics : [];
+  });
+
+  const [customInformation, setCustomInformation] = useState(() => {
+    if (returnData?.customInformation) {
+      return returnData.customInformation;
+    }
+    return isEditMode ? surveyToEdit?.customInformation : '';
+  });
+
+  const [customChartName, setCustomChartName] = useState('');
   const [editingDemographic, setEditingDemographic] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentRanges, setCurrentRanges] = useState([]);
   const [newRangeLabel, setNewRangeLabel] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [customChartName, setCustomChartName] = useState('');
   const [selectedToDelete, setSelectedToDelete] = useState([]);
+
+  const surveyName = returnData?.surveyName || 
+    (isEditMode ? surveyToEdit.name : (location.state?.surveyName || 'Untitled Survey'));
 
   const handleDemographicClick = (demographic) => {
     setEditingDemographic(demographic);
@@ -239,7 +253,7 @@ const CreateSurvey = () => {
   };
 
   const handleSaveSurvey = () => {
-    const updatedSurvey = {
+    const surveyData = {
       id: isEditMode ? surveyToEdit.id : Date.now(),
       name: surveyName,
       owner: "Akiva Yeshurun",
@@ -249,23 +263,20 @@ const CreateSurvey = () => {
       customInformation: customInformation
     };
 
-    // Get existing surveys
-    const existingSurveys = JSON.parse(localStorage.getItem('surveys') || '[]');
-    
-    if (isEditMode) {
-      // Update existing survey
-      const updatedSurveys = existingSurveys.map(survey => 
-        survey.id === updatedSurvey.id ? updatedSurvey : survey
-      );
-      localStorage.setItem('surveys', JSON.stringify(updatedSurveys));
-    } else {
-      // Add new survey
-      const updatedSurveys = [...existingSurveys, updatedSurvey];
-      localStorage.setItem('surveys', JSON.stringify(updatedSurveys));
-    }
-
-    // Navigate back to the survey view
-    navigate(`/survey/${updatedSurvey.id}`, { state: { survey: updatedSurvey } });
+    navigate('/survey-questions', { 
+      state: { 
+        surveyData,
+        isEditMode,
+        returnData: {
+          selectedDemographics,
+          customInformation,
+          surveyName,
+          isEditMode,
+          surveyToEdit
+        }
+      },
+      replace: false  // Make sure we're not replacing the history
+    });
   };
 
   const handleSaveChanges = () => {

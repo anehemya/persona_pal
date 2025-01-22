@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
-import { Box, Typography, Grid, Card, Button } from '@mui/material';
+import { Box, Typography, Grid, Card, Button, Radio, RadioGroup, FormControlLabel, FormControl, Slider, TextField } from '@mui/material';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
@@ -32,6 +32,75 @@ const StablePieChart = ({ data }) => (
     </div>
   </Box>
 );
+
+// Add this component to display questions
+const QuestionDisplay = ({ question, index }) => {
+  return (
+    <Box sx={{ mb: 4 }}>
+      <Typography variant="h6" gutterBottom>
+        {index + 1}. {question.question}
+      </Typography>
+
+      {question.type === 'multiple-choice' && (
+        <FormControl component="fieldset">
+          <RadioGroup>
+            {question.options.map((option, i) => (
+              <FormControlLabel
+                key={i}
+                value={option}
+                control={<Radio />}
+                label={option}
+              />
+            ))}
+          </RadioGroup>
+        </FormControl>
+      )}
+
+      {question.type === 'slider' && (
+        <Box sx={{ px: 2 }}>
+          <Slider
+            min={question.min}
+            max={question.max}
+            step={question.step}
+            marks={[
+              { value: question.min, label: question.min },
+              { value: question.max, label: question.max }
+            ]}
+            valueLabelDisplay="auto"
+          />
+        </Box>
+      )}
+
+      {question.type === 'numeric' && (
+        <TextField
+          type="number"
+          placeholder={question.placeholder}
+          InputProps={{
+            inputProps: { 
+              min: question.min,
+              max: question.max
+            }
+          }}
+        />
+      )}
+
+      {question.type === 'true-false' && (
+        <FormControl component="fieldset">
+          <RadioGroup>
+            {question.options.map((option, i) => (
+              <FormControlLabel
+                key={i}
+                value={option}
+                control={<Radio />}
+                label={option}
+              />
+            ))}
+          </RadioGroup>
+        </FormControl>
+      )}
+    </Box>
+  );
+};
 
 const SurveyView = () => {
   const location = useLocation();
@@ -134,6 +203,18 @@ const SurveyView = () => {
           <Typography sx={{ whiteSpace: 'pre-wrap' }}>
             {survey.customInformation}
           </Typography>
+        </Box>
+
+        {/* Add the questions section to the SurveyView component */}
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h6" gutterBottom>Survey Questions</Typography>
+          {survey.questions?.map((question, index) => (
+            <QuestionDisplay
+              key={question.id}
+              question={question}
+              index={index}
+            />
+          ))}
         </Box>
       </Box>
     </Layout>
