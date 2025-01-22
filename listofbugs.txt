@@ -1,0 +1,7 @@
+1) Specifically for the CreateSurvey page, when you zoom in on the page, an error occurs.
+"ERROR
+ResizeObserver loop completed with undelivered notifications.
+    at handleError (http://localhost:3000/static/js/bundle.js:87047:58)
+    at http://localhost:3000/static/js/bundle.js:87066:7"
+Interestingly, this error does not occur on the SurveyView page.
+
