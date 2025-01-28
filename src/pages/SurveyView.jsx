@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
 import { Box, Typography, Grid, Card, Button, Radio, RadioGroup, FormControlLabel, FormControl, Slider, TextField } from '@mui/material';
@@ -105,14 +105,29 @@ const QuestionDisplay = ({ question, index }) => {
 const SurveyView = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const survey = location.state?.survey;
+  const [survey, setSurvey] = useState(() => {
+    // Try to get survey from location state first
+    if (location.state?.survey) {
+      return location.state.survey;
+    }
+    // If not in state, try to get from localStorage using URL id
+    const pathId = window.location.pathname.split('/').pop();
+    const surveys = JSON.parse(localStorage.getItem('surveys') || '[]');
+    return surveys.find(s => s.id.toString() === pathId);
+  });
 
   if (!survey) {
-    // Handle case where survey isn't found
     return (
       <Layout>
         <Box sx={{ p: 3 }}>
           <Typography>Survey not found</Typography>
+          <Button 
+            variant="contained" 
+            onClick={() => navigate('/')}
+            sx={{ mt: 2 }}
+          >
+            Return to Home
+          </Button>
         </Box>
       </Layout>
     );

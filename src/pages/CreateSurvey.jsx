@@ -260,7 +260,9 @@ const CreateSurvey = () => {
       creationDate: isEditMode ? surveyToEdit.creationDate : new Date().toLocaleDateString(),
       lastModified: new Date().toLocaleDateString(),
       demographics: selectedDemographics,
-      customInformation: customInformation
+      customInformation: customInformation,
+      questions: isEditMode ? surveyToEdit.questions : [],
+      isEditMode: isEditMode
     };
 
     navigate('/survey-questions', { 
@@ -275,7 +277,7 @@ const CreateSurvey = () => {
           surveyToEdit
         }
       },
-      replace: false  // Make sure we're not replacing the history
+      replace: false
     });
   };
 
@@ -408,7 +410,15 @@ const CreateSurvey = () => {
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4 }}>
           <Button 
             variant="outlined" 
-            onClick={() => navigate(isEditMode ? `/survey/${surveyToEdit.id}` : '/')}
+            onClick={() => {
+              if (isEditMode && surveyToEdit) {
+                navigate(`/survey/${surveyToEdit.id}`, {
+                  state: { survey: surveyToEdit }
+                });
+              } else {
+                navigate('/');
+              }
+            }}
           >
             Cancel
           </Button>

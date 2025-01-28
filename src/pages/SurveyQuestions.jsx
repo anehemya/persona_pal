@@ -198,7 +198,10 @@ const SurveyQuestions = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const surveyData = location.state?.surveyData;
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState(() => {
+    // Initialize with existing questions if in edit mode
+    return surveyData?.questions || [];
+  });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedQuestionType, setSelectedQuestionType] = useState(null);
   const [questionConfig, setQuestionConfig] = useState(null);
@@ -221,29 +224,35 @@ const SurveyQuestions = () => {
   };
 
   const handleSaveSurvey = () => {
+    const existingSurveys = JSON.parse(localStorage.getItem('surveys') || '[]');
+    
     const completeSurvey = {
       ...surveyData,
       questions: questions,
       lastModified: new Date().toLocaleDateString()
     };
 
-    // Get existing surveys
-    const existingSurveys = JSON.parse(localStorage.getItem('surveys') || '[]');
+    // Log to help debug
+    console.log('Is Edit Mode:', surveyData.isEditMode);
+    console.log('Survey ID:', surveyData.id);
+    console.log('Complete Survey:', completeSurvey);
     
     if (surveyData.isEditMode) {
       // Update existing survey
       const updatedSurveys = existingSurveys.map(survey => 
-        survey.id === completeSurvey.id ? completeSurvey : survey
+        survey.id === surveyData.id ? completeSurvey : survey
       );
+      console.log('Updated Surveys:', updatedSurveys);
       localStorage.setItem('surveys', JSON.stringify(updatedSurveys));
     } else {
       // Add new survey
-      const updatedSurveys = [...existingSurveys, completeSurvey];
-      localStorage.setItem('surveys', JSON.stringify(updatedSurveys));
+      localStorage.setItem('surveys', JSON.stringify([...existingSurveys, completeSurvey]));
     }
 
-    // Navigate to the survey view
-    navigate(`/survey/${completeSurvey.id}`, { state: { survey: completeSurvey } });
+    navigate(`/survey/${completeSurvey.id}`, { 
+      state: { survey: completeSurvey },
+      replace: true
+    });
   };
 
   const handleDragEnd = (event) => {
