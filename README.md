@@ -1,3 +1,5 @@
+# NOTE: This application has not been deployed with AI capabilities due to cost limitations. What you see displayed in the Vercel app is the front end only.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
